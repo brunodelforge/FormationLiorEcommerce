@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class ProductController extends AbstractController
@@ -52,16 +53,17 @@ class ProductController extends AbstractController
     /**
      * @Route("/admin/product/{id}/edit", name="product_edit")
      */
-    public function edit($id, Request $request, ProductRepository $productRepository, EntityManagerInterface $manager, SluggerInterface $slugger)
+    public function edit($id, Request $request, ProductRepository $productRepository, EntityManagerInterface $manager, SluggerInterface $slugger, ValidatorInterface $validator)
     {
         $product = $productRepository->find($id);
 
         $form = $this->createForm(ProductType::class, $product);
+
         //$form->setData($product);
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             //$product = $form->getData();
             $product->setSlug(strtolower($slugger->slug($product->getName())));
 
@@ -92,7 +94,7 @@ class ProductController extends AbstractController
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             //$product = $form->getData();
             $product->setSlug(strtolower($slugger->slug($product->getName())));
             $manager->persist($product);
