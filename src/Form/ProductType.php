@@ -4,9 +4,14 @@ namespace App\Form;
 
 use App\Entity\Product;
 use App\Entity\Category;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use App\Form\Type\PriceType;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\FormBuilderInterface;
+use App\Form\DataTransformer\CentimesTransformer;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -34,7 +39,9 @@ class ProductType extends AbstractType
                 'label' => 'Prix du produit',
                 'attr' => [
                     'placeholder' => 'Tapez le prix du produit en €'
-                ]
+                ],
+                'divisor' => 100
+
             ])
             ->add('category', EntityType::class, [
                 'label' => 'Catégorie du produit',
@@ -50,6 +57,36 @@ class ProductType extends AbstractType
                     'placeholder' => 'Tapez une Url de l\'image'
                 ]
             ]);
+
+        //$builder->get('price')->addModelTransformer(new CentimesTransformer);
+
+        /*$builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
+            $form = $event->getForm();
+            /** @var Product */
+        /*$product = $event->getData();
+            if ($product->getPrice !== null) {
+                $product->setPrice($product->getPrice() * 100);
+            }
+        /*});
+
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
+            $form = $event->getForm();
+            /** @var Product */
+        /*$product = $event->getData();
+            if ($product->getPrice !== null) {
+                $product->setPrice($product->getPrice() / 100);
+            }
+            /*if($product->getId() {
+                $builder->add('category', EntityType::class, [
+                    'label' => 'Catégorie du produit',
+                    'placeholder' => '-- Choisir une catégorie --',
+                    'class' => Category::class,
+                    'choice_label' => function (Category $category) {
+                        return strtoupper($category->getName());
+                    }
+                ]);
+            }*/
+        //});
     }
 
     public function configureOptions(OptionsResolver $resolver)
