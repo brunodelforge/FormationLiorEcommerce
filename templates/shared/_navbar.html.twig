@@ -16,13 +16,19 @@
 				{% endfor %}
 			</ul>
 			<ul class="navbar-nav">
-				<li class="nav-item">
-					<a href="" class="nav-link">Inscription</a>
-				</li>
-				<li class="nav-item btn btn-success">Login</li>
-				<li class="nav-item">
-					<a href="" class="btn btn-danger">Logout</a>
-				</li>
+
+				{% if not app.user %}
+					<li class="nav-item">
+						<a href="" class="nav-link">Inscription</a>
+					</li>
+					<li class="nav-item">
+						<a href="{{path('security_login')}}" class="btn btn-success">Login</a>
+					</li>
+				{% else %}
+					<li class="nav-item">
+						<a href="{{path('security_logout')}}" class="btn btn-danger">Logout</a>
+					</li>
+				{% endif %}
 			</ul>
 			<form class="d-flex">
 				<input class="form-control me-sm-2" type="text" placeholder="Search">
