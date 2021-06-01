@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<h1>Vos achats</h1>
+	{% if purchases | length > 0 %}
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Numéro</th>
+					<th>Adresse</th>
+					<th>Date de Commande</th>
+					<th>Produits</th>
+					<th>Total</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for p in purchases %}
+					<tr>
+						<td>{{p.id}}</td>
+						<td>{{p.adress}}<br>{{p.postalCode}},
+							{{p.city}}</td>
+						<td>{{p.purchasedAt | date('d/m/Y H:m')}}</td>
+						<td>
+							<ul>
+								{% for item in p.purchaseItems %}
+									<li>{{item.quantity}}x
+										{{item.productName}}
+										({{item.total / 100}}
+										&euro;)</li>
+								{% endfor %}
+							</ul>
+						</td>
+						<td>{{p.total}}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p>Vous n'avez fait aucun achat</p>
+	{% endif %}
+{% endblock %}
