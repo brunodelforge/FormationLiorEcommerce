@@ -2,21 +2,23 @@
 
 namespace App\Controller\Purchase;
 
-use App\Cart\CartService;
+use DateTime;
 use App\Entity\Purchase;
+use App\Cart\CartService;
 use App\Entity\PurchaseItem;
 use App\Form\CartConfirmationType;
-use DateTime;
+use App\Purchase\PurchasePersister;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\RouterInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 
 class PurchaseConfirmationController
 {
@@ -25,18 +27,21 @@ class PurchaseConfirmationController
     protected $security;
     protected $cartService;
     protected $manager;
+    protected $persister;
 
-    public function __construct(EntityManagerInterface $manager, FormFactoryInterface $formFactory, RouterInterface $routerInterface, Security $security, CartService $cartService)
+    public function __construct(EntityManagerInterface $manager, FormFactoryInterface $formFactory, RouterInterface $routerInterface, Security $security, CartService $cartService, PurchasePersister $persister)
     {
         $this->formFactory = $formFactory;
         $this->routerInterface = $routerInterface;
         $this->security = $security;
         $this->cartService = $cartService;
         $this->manager = $manager;
+        $this->persister = $persister;
     }
 
     /**
      * @Route("/purchase/confirm", name="purchase_confirm")
+     * @IsGranted("ROLE_USER", message="Vous devez être connecté")
      */
     public function confirm(Request $request, FlashBagInterface $flashBag)
     {
@@ -52,7 +57,6 @@ class PurchaseConfirmationController
 
         //3. si je ne suis pas connecté => sortir
         $user = $this->security->getUser();
-        if (!$user) throw new AccessDeniedException('Vous devez être connecté pour confirmer une commande');
 
         //4. si le formulaire n'a pas été soumis => sortir
         $form->handleRequest($request);
@@ -65,34 +69,10 @@ class PurchaseConfirmationController
         /** @var Purchase */
         $purchase = $form->getData();
 
-        //6. lier avec l'utilisateuir connecté (security)
-        $purchase->setUser($user)
-            ->setPurchasedAt(new DateTime())
-            ->setTotal($this->cartService->getTotal());
+        $this->persister->storePurchase($purchase);
 
-
-        $this->manager->persist($purchase);
-
-        //7. lier avec les produits dans le panier
-        foreach ($this->cartService->getDetailedCartItems() as $cartItem) {
-            $purchaseItem = new PurchaseItem;
-            $purchaseItem->setPurchase($purchase)
-                ->setProduct($cartItem->product)
-                ->setProductName($cartItem->product->getPrice())
-                ->setQuantity($cartItem->qty)
-                ->setTotal($cartItem->getTotal())
-                ->setProductPrice($cartItem->product->getPrice());
-
-            $this->manager->persist($purchaseItem);
-        }
-
-        //8. enregistrer dans doctrine (entitymanager)
-        $this->manager->flush();
-
-        //9. on vide le panier
-        $this->cartService->empty();
-
-        $flashBag->add('success', 'La commande a bien été enregistrée');
-        return new RedirectResponse($this->routerInterface->generate('purchase_index'));
+        return new RedirectResponse($this->routerInterface->generate('purchase_payment_form', [
+            'id' => $purchase->getId()
+        ]));
     }
 }

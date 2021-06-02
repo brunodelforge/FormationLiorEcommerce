@@ -86,7 +86,6 @@ class CartController extends AbstractController
 
         $this->addFlash("success", "Le produit a bien été décrémenté");
 
-
         return $this->redirectToRoute(("cart_show"));
     }
 }
