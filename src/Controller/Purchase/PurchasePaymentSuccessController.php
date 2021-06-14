@@ -26,7 +26,7 @@ class PurchasePaymentSuccessController extends AbstractController
      * @Route("/purchase/terminate/{id}", name="purchase_payment_success")
      * @IsGranted("ROLE_USER", message="Vous devez être connecté")
      */
-    public function success($id, PurchaseRepository $purchaseRepository, EventDispatcherInterface $dispatcher)
+    public function success($id, PurchaseRepository $purchaseRepository, EventDispatcherInterface $eventDispatcher)
     {
         //1. Je récupère la commande
         $purchase = $purchaseRepository->find($id);
@@ -40,7 +40,7 @@ class PurchasePaymentSuccessController extends AbstractController
 
         // lancer un évènement pour que les autres dévelopeurs puisent agir
         $purchaseEvent = new PurchaseSuccessEvent($purchase);
-        $dispatcher->dispatch($purchaseEvent, 'purchase.success');
+        $eventDispatcher->dispatch($purchaseEvent, 'purchase.success');
 
         //4. Je redirige avec un flash vers la liste des commandes
         $this->addFlash('success', 'Votre paiement a été confirmé');
