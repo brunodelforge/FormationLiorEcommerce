@@ -2,13 +2,13 @@
 
 namespace App\EventDispatcher;
 
+use App\Entity\User;
 use Psr\Log\LoggerInterface;
 use App\Event\PurchaseSuccessEvent;
 use Symfony\Component\Mime\Address;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Security\Core\User\User;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class PurchaseSuccessEmailSuscriber implements EventSubscriberInterface
@@ -41,7 +41,7 @@ class PurchaseSuccessEmailSuscriber implements EventSubscriberInterface
         $email = new TemplatedEmail();
         $email->to(new Address($currentUser->getEmail(), $currentUser->getFullName()))
             ->from("contact@mail.com")
-            ->subject("Bravo, votre commande ({purchase->Id()} a bien été confirmée")
+            ->subject("Bravo, votre commande n°({$purchase->getId()}) a bien été confirmée")
             ->htmlTemplate('emails/purchase_success.html.twig')
             ->context([
                 'purchase' => $purchase,
